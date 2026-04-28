@@ -12,5 +12,5 @@ public interface MedicoService {
     Medico save(Medico medico);
     void deleteById(Long id);
     Medico updateById(Long id, Medico medico);
-    List<AtencionDTO> findAtencionByMedico(Long id);
+    // List<AtencionDTO> findAtencionByMedico(Long id);
 }
