@@ -74,4 +74,14 @@ public class AtencionServiceImpl implements AtencionService {
     public void deleteById(Long id) {
         this.atencionRepository.deleteById(id);
     }
+
+    @Override
+    public List<Atencion> findByPacienteId(Long idPaciente) {
+        return this.atencionRepository.findByPacienteId(idPaciente);
+    }
+
+    @Override
+    public List<Atencion> findByMedicoId(Long idMedico) {
+        return this.atencionRepository.findByMedicoId(idMedico);
+    }
 }
