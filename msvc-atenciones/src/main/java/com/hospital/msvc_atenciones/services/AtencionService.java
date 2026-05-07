@@ -10,4 +10,5 @@ public interface AtencionService {
     Atencion save(Atencion atencion);
     Atencion updateById(Atencion atencion, Long id);
     void deleteById(Long id);
+    List<Atencion> findByMedicoId(Long medicoId);
 }
