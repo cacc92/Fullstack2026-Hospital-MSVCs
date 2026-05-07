@@ -31,6 +31,13 @@ public class AtencionServiceImpl implements AtencionService {
     }
 
     @Override
+    public Atencion findByID(Long id) {
+        return this.atencionRepository.findById(id).orElseThrow(
+                () -> new AtencionException("La atencion con id "+id+" no existe")
+        );
+    }
+
+    @Override
     public Atencion save(Atencion atencion) {
         try {
             MedicoDTO medico = this.medicoClient.getMedicoById(atencion.getMedicoId());
@@ -44,5 +51,29 @@ public class AtencionServiceImpl implements AtencionService {
         }
         return atencionRepository.save(atencion);
 
+    }
+
+    @Override
+    public Atencion updateById(Atencion atencion, Long id) {
+        return this.atencionRepository.findById(id).map(a->{
+            a.setComentario(atencion.getComentario());
+            a.setHoraAtencion(atencion.getHoraAtencion());
+            try{
+                MedicoDTO medico = this.medicoClient.getMedicoById(atencion.getMedicoId());
+                a.setMedicoId(medico.getMedicoId());
+            }catch (FeignException exception){
+                throw new AtencionException("El medico con id "+id+" no existe");
+            }
+            a.setCosto(atencion.getCosto());
+            return this.atencionRepository.save(a);
+
+        }).orElseThrow(
+                () -> new AtencionException("La atención con id: "+id+" no existe")
+        );
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        this.atencionRepository.deleteById(id);
     }
 }
