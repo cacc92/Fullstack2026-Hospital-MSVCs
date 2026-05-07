@@ -1,6 +1,7 @@
 package com.hospital.msvc_atenciones.controllers;
 
 import com.hospital.msvc_atenciones.models.Atencion;
+import com.hospital.msvc_atenciones.models.dtos.AtencionDetalleDTO;
 import com.hospital.msvc_atenciones.services.AtencionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ public class AtencionController {
     private AtencionService atencionService;
 
     @GetMapping
-    public ResponseEntity<List<Atencion>> getAllAtenciones() {
+    public ResponseEntity<List<AtencionDetalleDTO>> getAllAtenciones() {
         return ResponseEntity.ok(atencionService.findAll());
     }
 

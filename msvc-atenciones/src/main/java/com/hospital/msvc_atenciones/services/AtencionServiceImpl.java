@@ -4,13 +4,16 @@ import com.hospital.msvc_atenciones.clients.MedicoClient;
 import com.hospital.msvc_atenciones.clients.PacienteClient;
 import com.hospital.msvc_atenciones.exceptions.AtencionException;
 import com.hospital.msvc_atenciones.models.Atencion;
+import com.hospital.msvc_atenciones.models.dtos.AtencionDetalleDTO;
 import com.hospital.msvc_atenciones.models.dtos.MedicoDTO;
 import com.hospital.msvc_atenciones.models.dtos.PacienteDTO;
+import com.hospital.msvc_atenciones.models.dtos.PersonaDTO;
 import com.hospital.msvc_atenciones.repositories.AtencionRepository;
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,8 +29,34 @@ public class AtencionServiceImpl implements AtencionService {
     private PacienteClient pacienteClient;
 
     @Override
-    public List<Atencion> findAll() {
-        return atencionRepository.findAll();
+    public List<AtencionDetalleDTO> findAll() {
+       return this.atencionRepository.findAll().stream().map(a-> {
+           AtencionDetalleDTO atencion = new AtencionDetalleDTO();
+           atencion.setAtencionId(a.getAtencionId());
+           atencion.setHoraAtencion(a.getHoraAtencion());
+           atencion.setComentario(a.getComentario());
+           atencion.setCosto(a.getCosto());
+           try {
+               // Saco la información desde medico client
+               PersonaDTO medico = new PersonaDTO();
+               MedicoDTO medicoDTO = this.medicoClient.getMedicoById(a.getMedicoId());
+               medico.setId(medicoDTO.getMedicoId());
+               medico.setRut(medicoDTO.getRun());
+               medico.setNombreCompleto(medicoDTO.getNombreCompleto());
+               atencion.setMedico(medico);
+
+               PersonaDTO paciente = new PersonaDTO();
+               PacienteDTO pacienteDTO = this.pacienteClient.getPacienteById(a.getPacienteId());
+               paciente.setId(pacienteDTO.getPacienteId());
+               paciente.setRut(pacienteDTO.getRut());
+               paciente.setNombreCompleto(pacienteDTO.getNombres()+" "+pacienteDTO.getApellidos());
+               atencion.setPaciente(paciente);
+           } catch (FeignException exception) {
+               throw new AtencionException("El medico o paciente no existe");
+           }
+           return atencion;
+       }).toList();
+
     }
 
     @Override

@@ -1,7 +1,9 @@
 package com.hospital.msvc_pacientes.services;
 
+import com.hospital.msvc_pacientes.clients.AtencionClient;
 import com.hospital.msvc_pacientes.exceptions.PacienteException;
 import com.hospital.msvc_pacientes.models.Paciente;
+import com.hospital.msvc_pacientes.models.dtos.AtencionDTO;
 import com.hospital.msvc_pacientes.repositories.PacienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,9 @@ import java.util.List;
 public class PacienteServiceImpl implements PacienteService {
     @Autowired
     private PacienteRepository pacienteRepository;
+
+    @Autowired
+    private AtencionClient atencionClient;
 
     @Transactional(readOnly = true)
     @Override
@@ -59,6 +64,12 @@ public class PacienteServiceImpl implements PacienteService {
     @Transactional
     @Override
     public void deleteById(Long id) {
+        List<AtencionDTO> atenciones = this.atencionClient.getAtencionesByPacienteId(id);
+        if(!atenciones.isEmpty()){
+            for(AtencionDTO atencion: atenciones){
+                this.atencionClient.deleteAtencionById(atencion.getAtencionId());
+            }
+        }
         this.pacienteRepository.deleteById(id);
     }
 

@@ -1,11 +1,12 @@
 package com.hospital.msvc_atenciones.services;
 
 import com.hospital.msvc_atenciones.models.Atencion;
+import com.hospital.msvc_atenciones.models.dtos.AtencionDetalleDTO;
 
 import java.util.List;
 
 public interface AtencionService {
-    List<Atencion> findAll();
+    List<AtencionDetalleDTO> findAll();
     Atencion findByID(Long id);
     Atencion save(Atencion atencion);
     Atencion updateById(Atencion atencion, Long id);
