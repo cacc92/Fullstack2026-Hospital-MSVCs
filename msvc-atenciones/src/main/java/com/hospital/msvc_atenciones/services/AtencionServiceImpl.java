@@ -81,4 +81,9 @@ public class AtencionServiceImpl implements AtencionService {
     public List<Atencion> findByMedicoId(Long medicoId) {
         return this.atencionRepository.findByMedicoId(medicoId);
     }
+
+    @Override
+    public List<Atencion> findByPacienteId(Long pacienteId) {
+        return this.atencionRepository.findByPacienteId(pacienteId);
+    }
 }

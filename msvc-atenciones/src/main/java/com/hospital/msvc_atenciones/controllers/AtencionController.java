@@ -53,4 +53,9 @@ public class AtencionController {
         return ResponseEntity.ok(this.atencionService.findByMedicoId(id));
     }
 
+    @GetMapping("/paciente/{id}")
+    public ResponseEntity<List<Atencion>> getByPacienteId(@PathVariable Long id){
+        return ResponseEntity.ok(this.atencionService.findByPacienteId(id));
+    }
+
 }
