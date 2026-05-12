@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name="msvc-atencion", url = "https://localhost:8002/api/v1/atenciones")
+@FeignClient(name="msvc-atencion", url = "localhost:8002/api/v1/atenciones")
 public interface AtencionClient {
 
     @GetMapping("/paciente/{idPaciente}")

@@ -4,8 +4,10 @@ import com.hospital.msvc_atenciones.clients.MedicoClient;
 import com.hospital.msvc_atenciones.clients.PacienteClient;
 import com.hospital.msvc_atenciones.exceptions.AtencionException;
 import com.hospital.msvc_atenciones.models.Atencion;
+import com.hospital.msvc_atenciones.models.dtos.AtencionDTO;
 import com.hospital.msvc_atenciones.models.dtos.MedicoDTO;
 import com.hospital.msvc_atenciones.models.dtos.PacienteDTO;
+import com.hospital.msvc_atenciones.models.dtos.PersonaDTO;
 import com.hospital.msvc_atenciones.repositories.AtencionRepository;
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +28,36 @@ public class AtencionServiceImpl implements AtencionService {
     private PacienteClient pacienteClient;
 
     @Override
-    public List<Atencion> findAll() {
-        return this.atencionRepository.findAll();
+    public List<AtencionDTO> findAll() {
+        return this.atencionRepository.findAll().stream().map(a->{
+            AtencionDTO atencionDTO = new AtencionDTO();
+            atencionDTO.setHoraAtencion(a.getHoraAtencion());
+            atencionDTO.setId(a.getAtencionId());
+            atencionDTO.setCosto(a.getCosto());
+            atencionDTO.setComentario(a.getComentario());
+            MedicoDTO medicoDTO = null;
+            PacienteDTO pacienteDTO = null;
+            try{
+                medicoDTO = medicoClient.findById(a.getMedicoId());
+                pacienteDTO = pacienteClient.getPacienteById(a.getPacienteId());
+            }catch (FeignException e){
+                throw new AtencionException(e.getMessage());
+            }
+            PersonaDTO medico = new PersonaDTO();
+            medico.setId(a.getMedicoId());
+            medico.setRut(medicoDTO.getRun());
+            medico.setNombreCompleto(medicoDTO.getNombreCompleto());
+            atencionDTO.setMedico(medico);
+
+            PersonaDTO paciente = new PersonaDTO();
+            paciente.setId(a.getPacienteId());
+            paciente.setNombreCompleto(pacienteDTO.getNombres()+" "+pacienteDTO.getApellidos());
+            paciente.setRut(pacienteDTO.getRut());
+            atencionDTO.setPaciente(paciente);
+
+            return atencionDTO;
+
+        }).toList();
     }
 
     @Override
@@ -41,6 +71,7 @@ public class AtencionServiceImpl implements AtencionService {
     public Atencion save(Atencion atencion) {
         try {
             MedicoDTO medicoDTO = this.medicoClient.findById(atencion.getMedicoId());
+
         }catch (FeignException exception){
             throw new AtencionException("El medico con id "+ atencion.getMedicoId() +" no existe");
         }
