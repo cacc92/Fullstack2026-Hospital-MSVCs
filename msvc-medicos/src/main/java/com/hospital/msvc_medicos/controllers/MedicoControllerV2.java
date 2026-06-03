@@ -1,0 +1,102 @@
+package com.hospital.msvc_medicos.controllers;
+
+import com.hospital.msvc_medicos.assemblers.MedicoModelAssembler;
+import com.hospital.msvc_medicos.models.Medico;
+import com.hospital.msvc_medicos.models.dtos.MedicoDTO;
+import com.hospital.msvc_medicos.services.MedicoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
+@RestController
+@RequestMapping("/api/v2/medicos")
+@Validated
+@Tag(name="Medicos V2", description = "Metodos CRUD para la gestión de medicos")
+public class MedicoControllerV2 {
+
+    @Autowired
+    private MedicoService medicoService;
+
+    @Autowired
+    private MedicoModelAssembler medicoModelAssembler;
+
+    @GetMapping
+    @Operation(
+            summary = "Listado de todos los medicos",
+            description = "Se devuelve una lista con los medicos que se encuentran en la tabla medicos de la DB"
+
+    )
+    @ApiResponse(responseCode = "200", description = "Operacion Exitosa")
+    public ResponseEntity<CollectionModel<EntityModel<Medico>>> findAll() {
+        List<EntityModel<Medico>> entityModels = this.medicoService.findAll()
+                .stream()
+                .map(medicoModelAssembler::toModel)
+                .toList();
+        CollectionModel<EntityModel<Medico>> collectionModel = CollectionModel.of(
+                entityModels,
+                linkTo(methodOn(MedicoControllerV2.class).findAll()).withSelfRel()
+        );
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(collectionModel);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(
+            summary = "Busqueda de un medico",
+            description = "Se devuelve un medico, en caso contrario se devuelve una excepcion"
+    )
+    @ApiResponses(value={
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Medico encontrado",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = MedicoDTO.class),
+                            examples = {
+                                @ExampleObject(
+                                        name = "Ejemplo Medico",
+                                        value = "{\"rut\": \"1-1\", \"nombreComplto\": \"Dr. House\", \"jefeTurno\": true}"
+                                )
+                            }
+                    )),
+            @ApiResponse(responseCode = "404", description = "Medico no se encuentra en la BD")
+    })
+    public ResponseEntity<EntityModel<Medico>> findById(
+            @Parameter(description = "Id del medico a buscar", required = true, example = "1")
+            @PathVariable Long id
+    ) {
+        EntityModel<Medico> entityModel = this.medicoModelAssembler.toModel(
+                this.medicoService.findById(id)
+        );
+        return ResponseEntity.ok(entityModel);
+    }
+
+    @PostMapping
+    @Operation(summary = "Guardado de medico", description = "Esta es la forma de guardar un medico")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Medico a crear", required = true,
+            content = @Content(schema = @Schema(implementation = MedicoDTO.class))
+    )
+    public ResponseEntity<EntityModel<Medico>> save(@Valid @RequestBody Medico medico) {
+        Medico medicoCreate = this.medicoService.save(medico);
+        EntityModel<Medico> entityModel = this.medicoModelAssembler.toModel(medicoCreate);
+        return ResponseEntity.ok(entityModel);
+    }
+}
