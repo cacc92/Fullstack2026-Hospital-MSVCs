@@ -25,6 +25,8 @@ import java.util.List;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
+// Misma idea que V1 pero ruta /api/v2 y respuestas HATEOAS: ademas de los datos
+// se devuelven enlaces para navegar la API (EntityModel = 1 recurso, CollectionModel = lista).
 @RestController
 @RequestMapping("/api/v2/medicos")
 @Validated
@@ -34,6 +36,7 @@ public class MedicoControllerV2 {
     @Autowired
     private MedicoService medicoService;
 
+    // El assembler arma los enlaces HATEOAS de cada medico (ver MedicoModelAssembler).
     @Autowired
     private MedicoModelAssembler medicoModelAssembler;
 
@@ -45,10 +48,12 @@ public class MedicoControllerV2 {
     )
     @ApiResponse(responseCode = "200", description = "Operacion Exitosa")
     public ResponseEntity<CollectionModel<EntityModel<Medico>>> findAll() {
+        // 1) Traer medicos y convertir cada uno en EntityModel (medico + sus enlaces).
         List<EntityModel<Medico>> entityModels = this.medicoService.findAll()
                 .stream()
                 .map(medicoModelAssembler::toModel)
                 .toList();
+        // 2) Envolver la lista en un CollectionModel y agregarle su propio enlace self.
         CollectionModel<EntityModel<Medico>> collectionModel = CollectionModel.of(
                 entityModels,
                 linkTo(methodOn(MedicoControllerV2.class).findAll()).withSelfRel()
@@ -82,6 +87,7 @@ public class MedicoControllerV2 {
             @Parameter(description = "Id del medico a buscar", required = true, example = "1")
             @PathVariable Long id
     ) {
+        // Buscar el medico y pedirle al assembler que le agregue los enlaces.
         EntityModel<Medico> entityModel = this.medicoModelAssembler.toModel(
                 this.medicoService.findById(id)
         );

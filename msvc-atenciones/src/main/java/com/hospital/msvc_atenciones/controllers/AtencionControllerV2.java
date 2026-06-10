@@ -41,6 +41,7 @@ public class AtencionControllerV2 {
     @Autowired
     private AtencionService atencionService;
 
+    // El assembler arma los enlaces HATEOAS de cada atencion (ver AtencionModelAssembler).
     @Autowired
     private AtencionModelAssembler atencionModelAssembler;
 
@@ -56,6 +57,8 @@ public class AtencionControllerV2 {
     )
     @ApiResponse(responseCode = "200", description = "Operacion Exitosa")
     public ResponseEntity<CollectionModel<AtencionDTO>> findAll() {
+        // Aqui los items son DTOs enriquecidos (no la entidad), por eso solo agregamos
+        // el enlace self a la coleccion completa, no un enlace por item.
         List<AtencionDTO> atenciones = this.atencionService.findAll();
         CollectionModel<AtencionDTO> collectionModel = CollectionModel.of(
                 atenciones,

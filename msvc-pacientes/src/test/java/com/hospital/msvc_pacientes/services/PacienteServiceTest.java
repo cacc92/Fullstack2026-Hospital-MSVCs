@@ -29,15 +29,18 @@ import static org.mockito.Mockito.*;
  * <p>Se mockean el repositorio de pacientes y el cliente Feign de atenciones
  * para validar la lógica de negocio de forma aislada (sin base de datos ni red).</p>
  */
+// @ExtendWith(MockitoExtension.class): habilita Mockito. Pruebas unitarias: sin Spring ni BD real.
 @ExtendWith(MockitoExtension.class)
 public class PacienteServiceTest {
 
+    // @Mock: objetos falsos. Decidimos su comportamiento con when(...).
     @Mock
     private PacienteRepository pacienteRepository;
 
     @Mock
     private AtencionClient atencionClient;
 
+    // @InjectMocks: crea el servicio real y le inyecta los mocks de arriba.
     @InjectMocks
     private PacienteServiceImpl pacienteService;
 
@@ -149,6 +152,7 @@ public class PacienteServiceTest {
     @Test
     @DisplayName("Debe guardar un paciente nuevo")
     public void shouldSavePaciente() {
+        // El servicio valida que no exista el correo NI el rut antes de guardar: ambos vacios = ok.
         when(this.pacienteRepository.findByCorreo(this.pacientePrueba.getCorreo())).thenReturn(Optional.empty());
         when(this.pacienteRepository.findByRut(this.pacientePrueba.getRut())).thenReturn(Optional.empty());
         when(this.pacienteRepository.save(this.pacientePrueba)).thenReturn(this.pacientePrueba);
@@ -164,12 +168,14 @@ public class PacienteServiceTest {
     @Test
     @DisplayName("Debe lanzar excepcion al guardar un paciente con correo existente")
     public void shouldNotSavePacienteWhenCorreoExists() {
+        // El correo ya existe => el servicio debe lanzar excepcion y NO llamar a save.
         when(this.pacienteRepository.findByCorreo(this.pacientePrueba.getCorreo()))
                 .thenReturn(Optional.of(this.pacientePrueba));
 
         assertThatThrownBy(() -> this.pacienteService.save(this.pacientePrueba))
                 .isInstanceOf(PacienteException.class)
                 .hasMessage("Paciente ya existe");
+        // never(): confirmamos que jamas se intento guardar.
         verify(pacienteRepository, never()).save(any(Paciente.class));
     }
 

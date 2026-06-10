@@ -34,18 +34,21 @@ import static org.mockito.Mockito.*;
  * pacientes para verificar tanto el enriquecimiento de datos como el manejo de
  * errores de comunicación entre microservicios.</p>
  */
+// @ExtendWith(MockitoExtension.class): habilita Mockito. Pruebas unitarias: sin Spring, BD ni red real.
 @ExtendWith(MockitoExtension.class)
 public class AtencionServiceTest {
 
     @Mock
     private AtencionRepository atencionRepository;
 
+    // Clientes Feign mockeados: simulamos las respuestas de los otros microservicios.
     @Mock
     private MedicoClient medicoClient;
 
     @Mock
     private PacienteClient pacienteClient;
 
+    // @InjectMocks: crea el servicio real y le inyecta los 3 mocks de arriba.
     @InjectMocks
     private AtencionServiceImpl atencionService;
 
@@ -83,6 +86,8 @@ public class AtencionServiceTest {
     @Test
     @DisplayName("Debe listar todas las atenciones enriquecidas")
     public void shouldListAllAtenciones() {
+        // Arrange: el repo devuelve 1 atencion, y simulamos las respuestas de los msvc
+        // de medicos y pacientes para que el servicio pueda "enriquecer" el DTO.
         when(this.atencionRepository.findAll()).thenReturn(List.of(this.atencionPrueba));
 
         MedicoDTO medicoDTO = new MedicoDTO();
@@ -155,6 +160,8 @@ public class AtencionServiceTest {
     @Test
     @DisplayName("Debe lanzar excepcion al guardar con medico inexistente")
     public void shouldNotSaveAtencionWhenMedicoNotExists() {
+        // Simulamos que el msvc de medicos responde con error (FeignException = fallo HTTP).
+        // El servicio debe traducirlo a su propia AtencionException y no guardar nada.
         when(this.medicoClient.findById(10L)).thenThrow(mock(FeignException.class));
 
         assertThatThrownBy(() -> this.atencionService.save(this.atencionPrueba))

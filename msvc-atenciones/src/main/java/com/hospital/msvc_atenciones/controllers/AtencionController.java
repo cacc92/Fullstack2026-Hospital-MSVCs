@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// @RestController: cada metodo devuelve datos (JSON), no vistas HTML.
+// @RequestMapping: prefijo comun de las rutas (version 1 de la API).
+// @Validated: activa la validacion de los @Valid. @Tag: agrupa los endpoints en Swagger.
 @RestController
 @RequestMapping("/api/v1/atenciones")
 @Validated
@@ -28,6 +31,8 @@ public class AtencionController {
     @Autowired
     private AtencionService atencionService;
 
+    // findAll devuelve DTOs "enriquecidos": el servicio pide a los msvc de medicos y
+    // pacientes (via Feign) sus datos y los junta con la atencion en un solo objeto.
     @GetMapping
     @Operation(
             summary = "Listado de todas las atenciones",
@@ -58,6 +63,7 @@ public class AtencionController {
         return ResponseEntity.ok(atencionService.findById(id));
     }
 
+    // POST /api/v1/atenciones => crear. @Valid valida el body; @RequestBody convierte el JSON.
     @PostMapping
     @Operation(summary = "Guardado de atencion", description = "Esta es la forma de guardar una atencion")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -66,6 +72,7 @@ public class AtencionController {
     )
     @ApiResponse(responseCode = "201", description = "Atencion creada")
     public ResponseEntity<Atencion> save(@Valid @RequestBody Atencion atencion){
+        // El servicio valida que el medico y el paciente existan antes de guardar.
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(atencionService.save(atencion));

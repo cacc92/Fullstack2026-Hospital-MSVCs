@@ -19,15 +19,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// @RestController: cada metodo devuelve datos (JSON), no vistas HTML.
+// @RequestMapping: prefijo comun de las rutas (version 1 de la API).
+// @Validated: activa la validacion de los @Valid de los metodos.
+// @Tag: agrupa estos endpoints bajo un nombre en Swagger UI.
 @RestController
 @RequestMapping("/api/v1/pacientes")
 @Validated
 @Tag(name = "Pacientes V1", description = "Metodos CRUD para la gestión de pacientes")
 public class PacienteController {
 
+    // @Autowired: Spring inyecta la implementacion del servicio.
     @Autowired
     private PacienteService pacienteService;
 
+    // GET /api/v1/pacientes. @Operation/@ApiResponse solo documentan en Swagger.
     @GetMapping
     @Operation(
             summary = "Listado de todos los pacientes",
@@ -35,6 +41,7 @@ public class PacienteController {
     )
     @ApiResponse(responseCode = "200", description = "Operacion Exitosa")
     public ResponseEntity<List<Paciente>> findAll() {
+        // status(...).body(...) = codigo HTTP + cuerpo de la respuesta.
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(pacienteService.findAll());
@@ -54,6 +61,7 @@ public class PacienteController {
             @ApiResponse(responseCode = "404", description = "Paciente no se encuentra en la BD")
     })
     public ResponseEntity<Paciente> findById(
+            // @PathVariable toma el {id} de la URL. @Parameter solo lo documenta en Swagger.
             @Parameter(description = "Id del paciente a buscar", required = true, example = "1")
             @PathVariable Long id
     ) {
@@ -98,6 +106,7 @@ public class PacienteController {
                 .body(pacienteService.findByCorreo(correo));
     }
 
+    // POST /api/v1/pacientes => crear.
     @PostMapping
     @Operation(summary = "Guardado de paciente", description = "Esta es la forma de guardar un paciente")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -105,7 +114,9 @@ public class PacienteController {
             content = @Content(schema = @Schema(implementation = Paciente.class))
     )
     @ApiResponse(responseCode = "201", description = "Paciente creado")
+    // @Valid valida el JSON contra las reglas del modelo; @RequestBody lo convierte en objeto.
     public ResponseEntity<Paciente> save(@Valid @RequestBody Paciente paciente) {
+        // 201 Created: se creo un recurso nuevo.
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(pacienteService.save(paciente));

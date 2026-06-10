@@ -40,6 +40,7 @@ public class PacienteControllerV2 {
     @Autowired
     private PacienteService pacienteService;
 
+    // El assembler arma los enlaces HATEOAS de cada paciente (ver PacienteModelAssembler).
     @Autowired
     private PacienteModelAssembler pacienteModelAssembler;
 
@@ -55,10 +56,12 @@ public class PacienteControllerV2 {
     )
     @ApiResponse(responseCode = "200", description = "Operacion Exitosa")
     public ResponseEntity<CollectionModel<EntityModel<Paciente>>> findAll() {
+        // 1) Convertir cada paciente en EntityModel (paciente + sus enlaces).
         List<EntityModel<Paciente>> entityModels = this.pacienteService.findAll()
                 .stream()
                 .map(pacienteModelAssembler::toModel)
                 .toList();
+        // 2) Envolver la lista en un CollectionModel con su propio enlace self.
         CollectionModel<EntityModel<Paciente>> collectionModel = CollectionModel.of(
                 entityModels,
                 linkTo(methodOn(PacienteControllerV2.class).findAll()).withSelfRel()

@@ -23,21 +23,26 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+// @ExtendWith(MockitoExtension.class): habilita Mockito para crear los mocks de abajo.
+// Son pruebas unitarias: NO levantan Spring ni la base de datos, todo se simula.
 @ExtendWith(MockitoExtension.class)
 public class MedicoServiceTest {
 
+    // @Mock: objeto falso. No accede a la BD; nosotros decidimos que devuelve con when(...).
     @Mock
     private MedicoRepository medicoRepository;
 
     @Mock
     private AtencionClient atencionClient;
 
+    // @InjectMocks: crea el servicio real y le inyecta los @Mock de arriba.
     @InjectMocks
     private MedicoServiceImpl medicoService;
 
     private Medico medicoPrueba;
     private List<Medico> medicoList = new ArrayList<>();
 
+    // @BeforeEach se ejecuta antes de CADA test para dejar los datos en un estado conocido.
     @BeforeEach
     public void setUp() {
         this.medicoPrueba = new Medico();
@@ -61,18 +66,19 @@ public class MedicoServiceTest {
         }
     }
 
+    // Patron AAA: Arrange (preparar) -> Act (ejecutar) -> Assert (verificar).
     @Test
     @DisplayName("Debe listar todos los medicos")
     public void shouldBeListAllDoctors() {
-        // Arrange
+        // Arrange: definimos que devuelve el mock cuando se llame findAll().
         List<Medico> medicos = this.medicoList;
         medicos.add(this.medicoPrueba);
         when(this.medicoRepository.findAll()).thenReturn(medicos);
 
-        // ACT
+        // ACT: llamamos al metodo real del servicio.
         List<Medico> result = this.medicoService.findAll();
 
-        // ASSERT
+        // ASSERT: comprobamos el resultado y que el repo se uso 1 vez.
         assertThat(result).hasSize(101);
         assertThat(result).contains(medicoPrueba);
         verify(medicoRepository, times(1)).findAll();
@@ -99,8 +105,10 @@ public class MedicoServiceTest {
     @DisplayName("Debe buscar un medico con un id inexistente")
     public void shouldNotFindMedicoById() {
         Long id = 9999L;
+        // El repo "no encuentra" nada (Optional vacio), asi el servicio debe lanzar excepcion.
         when(this.medicoRepository.findById(id)).thenReturn(Optional.empty());
 
+        // assertThatThrownBy verifica que se lance la excepcion esperada y con el mensaje correcto.
         assertThatThrownBy(() -> {
             this.medicoService.findById(id);
         }).isInstanceOf(MedicoException.class)
@@ -227,7 +235,7 @@ public class MedicoServiceTest {
     @Test
     @DisplayName("Debe eliminar un medico junto con sus atenciones asociadas")
     public void shouldDeleteMedicoByIdWithAtenciones() {
-        // Arrange
+        // Arrange: simulamos que el otro microservicio (via Feign) devuelve 1 atencion.
         Long id = 1L;
         AtencionDTO atencion = new AtencionDTO();
         atencion.setAtencionId(50L);
@@ -237,7 +245,7 @@ public class MedicoServiceTest {
         // Act
         this.medicoService.deleteById(id);
 
-        // Assert
+        // Assert: primero debe borrar la atencion asociada y luego el medico.
         verify(atencionClient, times(1)).getAtencionesByIdMedico(id);
         verify(atencionClient, times(1)).deleteAtencionById(50L);
         verify(medicoRepository, times(1)).deleteById(id);
