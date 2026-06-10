@@ -99,4 +99,31 @@ public class MedicoControllerV2 {
         EntityModel<Medico> entityModel = this.medicoModelAssembler.toModel(medicoCreate);
         return ResponseEntity.ok(entityModel);
     }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Actualizacion de medico", description = "Se actualizan los datos de un medico existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Medico actualizado"),
+            @ApiResponse(responseCode = "404", description = "Medico no se encuentra en la BD")
+    })
+    public ResponseEntity<EntityModel<Medico>> update(
+            @Parameter(description = "Id del medico a actualizar", required = true, example = "1")
+            @PathVariable Long id,
+            @Valid @RequestBody Medico medico
+    ) {
+        Medico medicoUpdate = this.medicoService.updateById(id, medico);
+        EntityModel<Medico> entityModel = this.medicoModelAssembler.toModel(medicoUpdate);
+        return ResponseEntity.ok(entityModel);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminacion de medico", description = "Se elimina un medico y sus atenciones asociadas")
+    @ApiResponse(responseCode = "204", description = "Medico eliminado")
+    public ResponseEntity<Void> delete(
+            @Parameter(description = "Id del medico a eliminar", required = true, example = "1")
+            @PathVariable Long id
+    ) {
+        this.medicoService.deleteById(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
 }

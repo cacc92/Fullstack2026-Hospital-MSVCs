@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -75,5 +76,46 @@ public class MedicoController {
     )
     public ResponseEntity<Medico> save(@Valid @RequestBody Medico medico) {
         return ResponseEntity.ok(this.medicoService.save(medico));
+    }
+
+    @GetMapping("/run/{run}")
+    @Operation(
+            summary = "Busqueda de un medico por run",
+            description = "Se devuelve un medico segun su run, en caso contrario se devuelve una excepcion"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Medico encontrado"),
+            @ApiResponse(responseCode = "404", description = "Medico no se encuentra en la BD")
+    })
+    public ResponseEntity<Medico> findByRun(
+            @Parameter(description = "Run del medico a buscar", required = true, example = "11111111-1")
+            @PathVariable String run
+    ) {
+        return ResponseEntity.ok(this.medicoService.findByRun(run));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Actualizacion de medico", description = "Se actualizan los datos de un medico existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Medico actualizado"),
+            @ApiResponse(responseCode = "404", description = "Medico no se encuentra en la BD")
+    })
+    public ResponseEntity<Medico> update(
+            @Parameter(description = "Id del medico a actualizar", required = true, example = "1")
+            @PathVariable Long id,
+            @Valid @RequestBody Medico medico
+    ) {
+        return ResponseEntity.ok(this.medicoService.updateById(id, medico));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminacion de medico", description = "Se elimina un medico y sus atenciones asociadas")
+    @ApiResponse(responseCode = "204", description = "Medico eliminado")
+    public ResponseEntity<Void> delete(
+            @Parameter(description = "Id del medico a eliminar", required = true, example = "1")
+            @PathVariable Long id
+    ) {
+        this.medicoService.deleteById(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
