@@ -22,6 +22,8 @@
     </properties>
     <packaging>pom</packaging>
     <modules>
+        <module>msvc-eureka</module>
+        <module>msvc-gateway</module>
         <module>msvc-pacientes</module>
         <module>msvc-medicos</module>
         <module>msvc-atenciones</module>

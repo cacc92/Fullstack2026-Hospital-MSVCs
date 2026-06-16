@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: msvc-gateway
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          # Cada ruta: si la URL entra por el patron 'predicates', el gateway la reenvia
+          # a 'uri'. lb:// significa "busca este nombre en Eureka y balancea la carga".
+          routes:
+            - id: msvc-medicos
+              uri: lb://msvc-medicos
+              predicates:
+                - Path=/api/v1/medicos/**,/api/v2/medicos/**
+            - id: msvc-pacientes
+              uri: lb://msvc-pacientes
+              predicates:
+                - Path=/api/v1/pacientes/**,/api/v2/pacientes/**
+            - id: msvc-atenciones
+              uri: lb://msvc-atenciones
+              predicates:
+                - Path=/api/v1/atenciones/**,/api/v2/atenciones/**
+
+            # Rutas para el OpenAPI (JSON) de cada microservicio. El Swagger UI del gateway
+            # las consume. Usan el prefijo /api-docs/<svc> (NO /v3/api-docs) para no chocar con
+            # el /v3/api-docs propio del gateway. RewritePath lo traduce al /v3/api-docs real del servicio.
+            - id: medicos-api-docs
+              uri: lb://msvc-medicos
+              predicates:
+                - Path=/api-docs/medicos
+              filters:
+                - RewritePath=/api-docs/medicos, /v3/api-docs
+            - id: pacientes-api-docs
+              uri: lb://msvc-pacientes
+              predicates:
+                - Path=/api-docs/pacientes
+              filters:
+                - RewritePath=/api-docs/pacientes, /v3/api-docs
+            - id: atenciones-api-docs
+              uri: lb://msvc-atenciones
+              predicates:
+                - Path=/api-docs/atenciones
+              filters:
+                - RewritePath=/api-docs/atenciones, /v3/api-docs
+
+# Punto de entrada unico: todo el trafico entra por aqui.
+server:
+  port: 8080
+
+# El gateway tambien es cliente Eureka para poder resolver los lb://
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+# Swagger UI agregado: una sola pagina con un desplegable para elegir el microservicio.
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /docs/swagger-ui.html
+    # El desplegable apunta a los docs de cada servicio (ruteados por el gateway via lb://).
+    urls:
+      - name: medicos
+        url: /api-docs/medicos
+      - name: pacientes
+        url: /api-docs/pacientes
+      - name: atenciones
+        url: /api-docs/atenciones
