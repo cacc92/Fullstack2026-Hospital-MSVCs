@@ -20,6 +20,10 @@ spring:
               uri: lb://msvc-atenciones
               predicates:
                 - Path=/api/v1/atenciones/**,/api/v2/atenciones/**
+            - id: msvc-usuarios
+              uri: lb://msvc-usuarios
+              predicates:
+                - Path=/api/v1/auth/**,/api/v1/usuarios/**
 
             # Rutas para el OpenAPI (JSON) de cada microservicio. El Swagger UI del gateway
             # las consume. Usan el prefijo /api-docs/<svc> (NO /v3/api-docs) para no chocar con
@@ -42,6 +46,12 @@ spring:
                 - Path=/api-docs/atenciones
               filters:
                 - RewritePath=/api-docs/atenciones, /v3/api-docs
+            - id: usuarios-api-docs
+              uri: lb://msvc-usuarios
+              predicates:
+                - Path=/api-docs/usuarios
+              filters:
+                - RewritePath=/api-docs/usuarios, /v3/api-docs
 
 # Punto de entrada unico: todo el trafico entra por aqui.
 server:
@@ -60,9 +70,15 @@ springdoc:
     path: /docs/swagger-ui.html
     # El desplegable apunta a los docs de cada servicio (ruteados por el gateway via lb://).
     urls:
+      - name: usuarios
+        url: /api-docs/usuarios
       - name: medicos
         url: /api-docs/medicos
       - name: pacientes
         url: /api-docs/pacientes
       - name: atenciones
         url: /api-docs/atenciones
+
+# CLAVE SECRETA JWT: la MISMA que en msvc-usuarios y en los 3 microservicios. El gateway la usa para validar.
+jwt:
+  secret: clave-secreta-super-segura-para-jwt-hospital-msvc-duoc-2026-0616
