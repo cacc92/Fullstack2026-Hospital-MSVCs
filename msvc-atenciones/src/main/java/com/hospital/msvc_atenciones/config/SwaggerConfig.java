@@ -1,7 +1,10 @@
 package com.hospital.msvc_atenciones.config;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,16 +12,22 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SwaggerConfig {
 
-    // @Bean: el objeto que retorna este metodo queda disponible para que Spring lo inyecte.
-    // springdoc lo usa para construir la pagina de Swagger UI (ver springdoc.* en application.properties).
+    private static final String ESQUEMA = "bearer-jwt";
+
     @Bean
     public OpenAPI customOpenApi(){
-        // Info es la cabecera que se muestra arriba en /docs/swagger-ui.html (titulo, version, descripcion).
         return new OpenAPI()
                 .info(new Info()
                         .title("API Atenciones")
                         .version("1.0")
-                        .description("Documentación de la API de gestión de atenciones")
-                );
+                        .description("Documentación de la API de gestión de atenciones"))
+                // Esquema "bearer-jwt": agrega el boton Authorize para pegar el token JWT.
+                .components(new Components().addSecuritySchemes(ESQUEMA,
+                        new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")))
+                // Aplica el esquema a todos los endpoints, asi Swagger manda el token al probar.
+                .addSecurityItem(new SecurityRequirement().addList(ESQUEMA));
     }
 }
